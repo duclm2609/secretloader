@@ -11,7 +11,6 @@ import (
 	"log"
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 const AWS_REGION string = "ap-southeast-1"
@@ -97,15 +96,21 @@ func (s *SecretsLoader) LoadSecrets(target interface{}) error {
 	val = val.Elem()
 	typ := val.Type()
 
+	resp, err := s.client.GetSecretValue(context.TODO(), &secretsmanager.GetSecretValueInput{
+		SecretId: aws.String(s.opts.SecretName),
+	})
+	if err != nil {
+		return err
+	}
+
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		secretTag := field.Tag.Get("secret")
-		if secretTag == "" {
+		secretKey := field.Tag.Get("secret")
+		if secretKey == "" {
 			continue
 		}
 
-		secretName, jsonKey := parseTag(secretTag)
-		secretValue, err := s.getSecretValue(secretName, jsonKey)
+		secretValue, err := s.getSecretValue(resp, secretKey)
 		if err != nil {
 			return err
 		}
@@ -118,14 +123,7 @@ func (s *SecretsLoader) LoadSecrets(target interface{}) error {
 	return nil
 }
 
-func (s *SecretsLoader) getSecretValue(secretName, jsonKey string) (string, error) {
-	resp, err := s.client.GetSecretValue(context.TODO(), &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String(secretName),
-	})
-	if err != nil {
-		return "", err
-	}
-
+func (s *SecretsLoader) getSecretValue(resp *secretsmanager.GetSecretValueOutput, jsonKey string) (string, error) {
 	if jsonKey == "" {
 		return *resp.SecretString, nil
 	}
@@ -141,14 +139,6 @@ func (s *SecretsLoader) getSecretValue(secretName, jsonKey string) (string, erro
 	}
 
 	return value, nil
-}
-
-func parseTag(tag string) (secretName, jsonKey string) {
-	parts := strings.SplitN(tag, ":", 2)
-	if len(parts) == 2 {
-		return parts[0], parts[1]
-	}
-	return parts[0], ""
 }
 
 func setField(field reflect.Value, value string) error {
