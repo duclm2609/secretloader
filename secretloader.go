@@ -46,6 +46,7 @@ func NewSecretsLoader(opts Options) (*SecretsLoader, error) {
 
 		return &SecretsLoader{
 			client: secretsmanager.NewFromConfig(awsCfg),
+			opts:   opts,
 		}, nil
 	}
 
@@ -84,6 +85,7 @@ func NewSecretsLoader(opts Options) (*SecretsLoader, error) {
 	}
 	return &SecretsLoader{
 		client: secretsmanager.NewFromConfig(awsCfg),
+		opts:   opts,
 	}, nil
 }
 
