@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
-	"gits.tcbs.com.vn/lib/secretloader/internal/aws_rolesanywhere"
+	"github.com/duclm2609/secretloader/internal/aws_rolesanywhere"
 	"log"
 	"reflect"
 	"strconv"
