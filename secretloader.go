@@ -13,7 +13,10 @@ import (
 	"strconv"
 )
 
-const AWS_REGION string = "ap-southeast-1"
+const (
+	awsRegion     string = "ap-southeast-1"
+	secretTagName string = "awssecretmanager"
+)
 
 type AwsRoleAnywhereConfig struct {
 	PrivateKeyPath       string
@@ -39,7 +42,7 @@ type SecretsLoader struct {
 
 func NewSecretsLoader(opts Options) (*SecretsLoader, error) {
 	if opts.RoleAnywhereConfig == nil {
-		awsCfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(AWS_REGION))
+		awsCfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(awsRegion))
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +75,7 @@ func NewSecretsLoader(opts Options) (*SecretsLoader, error) {
 		return nil, err
 	}
 	awsCfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithRegion(AWS_REGION),
+		config.WithRegion(awsRegion),
 		config.WithCredentialsProvider(aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
 			return aws.Credentials{
 				AccessKeyID:     session.CredentialSet[0].Credentials.AccessKeyID,
@@ -107,7 +110,7 @@ func (s *SecretsLoader) LoadSecrets(target interface{}) error {
 
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		secretKey := field.Tag.Get("secret")
+		secretKey := field.Tag.Get(secretTagName)
 		if secretKey == "" {
 			continue
 		}
