@@ -7,8 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/duclm2609/secretloader/internal/aws_rolesanywhere"
 	"log"
+	"net/url"
 	"reflect"
 	"strconv"
 )
@@ -17,6 +19,32 @@ const (
 	awsRegion     string = "ap-southeast-1"
 	secretTagName string = "awssecretmanager"
 )
+
+type secretManagerEndpointResolver struct {
+	endpoint string
+}
+
+func (s *secretManagerEndpointResolver) ResolveEndpoint(ctx context.Context, params secretsmanager.EndpointParameters) (
+	smithyendpoints.Endpoint, error,
+) {
+	if s.endpoint != "" {
+		u, err := url.Parse(s.endpoint)
+		if err != nil {
+			return smithyendpoints.Endpoint{}, err
+		}
+		return smithyendpoints.Endpoint{
+			URI: *u,
+		}, nil
+	}
+
+	// delegate back to the default v2 resolver otherwise
+	return secretsmanager.NewDefaultEndpointResolverV2().ResolveEndpoint(ctx, params)
+}
+
+type AwsSecretManagerConfig struct {
+	SecretId string
+	Endpoint string
+}
 
 type AwsRoleAnywhereConfig struct {
 	PrivateKeyPath       string
@@ -31,8 +59,8 @@ type AwsRoleAnywhereConfig struct {
 }
 
 type Options struct {
-	SecretName         string
-	RoleAnywhereConfig *AwsRoleAnywhereConfig
+	SecretManagerConfig *AwsSecretManagerConfig
+	RoleAnywhereConfig  *AwsRoleAnywhereConfig
 }
 
 type SecretsLoader struct {
@@ -74,6 +102,7 @@ func NewSecretsLoader(opts Options) (*SecretsLoader, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	awsCfg, err := config.LoadDefaultConfig(context.TODO(),
 		config.WithRegion(awsRegion),
 		config.WithCredentialsProvider(aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
@@ -86,9 +115,17 @@ func NewSecretsLoader(opts Options) (*SecretsLoader, error) {
 	if err != nil {
 		log.Fatalf("Failed to load AWS config: %v", err)
 	}
+
 	return &SecretsLoader{
-		client: secretsmanager.NewFromConfig(awsCfg),
-		opts:   opts,
+		client: secretsmanager.NewFromConfig(
+			awsCfg,
+			func(o *secretsmanager.Options) {
+				o.EndpointResolverV2 = &secretManagerEndpointResolver{
+					endpoint: opts.SecretManagerConfig.Endpoint,
+				}
+			},
+		),
+		opts: opts,
 	}, nil
 }
 
@@ -102,7 +139,7 @@ func (s *SecretsLoader) LoadSecrets(target interface{}) error {
 	typ := val.Type()
 
 	resp, err := s.client.GetSecretValue(context.TODO(), &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String(s.opts.SecretName),
+		SecretId: aws.String(s.opts.SecretManagerConfig.SecretId),
 	})
 	if err != nil {
 		return err
