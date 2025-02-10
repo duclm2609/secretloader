@@ -1,4 +1,4 @@
-module github.com/duclm2609/secretloader
+module gits.tcbs.com.vn/community/go-secret-loader
 
 go 1.23
 
