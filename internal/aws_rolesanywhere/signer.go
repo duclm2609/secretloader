@@ -98,7 +98,7 @@ func (signerParams *SignerParams) GetScope() string {
 }
 
 // Create the canonical query string.
-func createCanonicalQueryString(r *http.Request, body io.ReadSeeker) string {
+func createCanonicalQueryString(r *http.Request) string {
 	rawQuery := strings.Replace(r.URL.Query().Encode(), "+", "%20", -1)
 	return rawQuery
 }
@@ -177,29 +177,15 @@ func createCanonicalHeaderString(r *http.Request) (string, string) {
 	return strings.Join(headerValues, "\n"), strings.Join(headers, ";")
 }
 
-// Convert HTTP request body (io.ReadCloser) to io.ReadSeeker
-func bodyToReadSeeker(rc io.ReadCloser) (io.ReadSeeker, error) {
-	defer rc.Close()
-
-	// Read the body into a buffer
-	buf, err := io.ReadAll(rc)
-	if err != nil {
-		return nil, err
-	}
-
-	// Wrap the buffer in a bytes.Reader (which implements io.ReadSeeker)
-	return bytes.NewReader(buf), nil
-}
-
 // Create the canonical request.
-func createCanonicalRequest(r *http.Request, body io.ReadSeeker, contentSha256 string) (string, string) {
+func createCanonicalRequest(r *http.Request, contentSha256 string) (string, string) {
 	var canonicalRequestStrBuilder strings.Builder
 	canonicalHeaderString, signedHeadersString := createCanonicalHeaderString(r)
 	canonicalRequestStrBuilder.WriteString("POST")
 	canonicalRequestStrBuilder.WriteString("\n")
 	canonicalRequestStrBuilder.WriteString("/sessions")
 	canonicalRequestStrBuilder.WriteString("\n")
-	canonicalRequestStrBuilder.WriteString(createCanonicalQueryString(r, body))
+	canonicalRequestStrBuilder.WriteString(createCanonicalQueryString(r))
 	canonicalRequestStrBuilder.WriteString("\n")
 	canonicalRequestStrBuilder.WriteString(canonicalHeaderString)
 	canonicalRequestStrBuilder.WriteString("\n\n")

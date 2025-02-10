@@ -97,13 +97,8 @@ func (c *RolesAnywhere) CreateSession(input *CreateSessionInput) (*CreateSession
 	req.Header.Set(x_amz_date, signerParams.GetFormattedSigningDateTime())
 	req.Header.Set(x_amz_x509, certificateToString(certificate))
 
-	reqBodySeeker, err := bodyToReadSeeker(req.Body)
-	if err != nil {
-		return nil, err
-	}
-	contentSha256 := calculateContentHash(req, reqBodySeeker)
-
-	canonicalRequest, signedHeadersString := createCanonicalRequest(req, reqBodySeeker, contentSha256)
+	contentSha256 := calculateContentHash(req, bytes.NewReader(reqBody))
+	canonicalRequest, signedHeadersString := createCanonicalRequest(req, contentSha256)
 
 	// ************* CALCULATE THE SIGNATURE *************
 	stringToSign := createStringToSign(canonicalRequest, signerParams)

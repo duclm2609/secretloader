@@ -21,7 +21,7 @@ type FileSystemSigner struct {
 func (fileSystemSigner *FileSystemSigner) Public() crypto.PublicKey {
 	privateKey, _ := fileSystemSigner.readCertFiles()
 	{
-		privateKey, ok := privateKey.(rsa.PrivateKey)
+		privateKey, ok := privateKey.(*rsa.PrivateKey)
 		if ok {
 			return &privateKey.PublicKey
 		}
