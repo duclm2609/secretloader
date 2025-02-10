@@ -1,4 +1,4 @@
-module gits.tcbs.com.vn/community/go-secret-loader
+module github.com/duclm2609/secretloader
 
 go 1.23
 
@@ -21,5 +21,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.14 // indirect
-	golang.org/x/crypto v0.28.0 // indirect
+	golang.org/x/crypto v0.33.0 // indirect
 )

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	smithyendpoints "github.com/aws/smithy-go/endpoints"
-	"gits.tcbs.com.vn/community/go-secret-loader/internal/aws_rolesanywhere"
+	"github.com/duclm2609/secretloader/internal/aws_rolesanywhere"
 	"log"
 	"net/url"
 	"reflect"
