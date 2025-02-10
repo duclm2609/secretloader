@@ -48,15 +48,14 @@ func (fileSystemSigner *FileSystemSigner) Sign(rand io.Reader, digest []byte, op
 		return nil, ErrUnsupportedHash
 	}
 
-	rsaPrivateKey, ok := privateKey.(rsa.PrivateKey)
+	rsaPrivateKey, ok := privateKey.(*rsa.PrivateKey)
 	if ok {
-		sig, err := rsa.SignPKCS1v15(rand, &rsaPrivateKey, opts.HashFunc(), hash[:])
+		sig, err := rsa.SignPKCS1v15(rand, rsaPrivateKey, opts.HashFunc(), hash[:])
 		if err == nil {
 			return sig, nil
 		}
 	}
 
-	log.Println("unsupported algorithm")
 	return nil, errors.New("unsupported algorithm")
 }
 
