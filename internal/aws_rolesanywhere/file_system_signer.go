@@ -70,7 +70,7 @@ func getFileSystemSigner(privateKeyPath string, certPath string, passphrase stri
 	fsSigner := &FileSystemSigner{certPath: certPath, privateKeyPath: privateKeyPath, passphrase: passphrase}
 	privateKey, _ := fsSigner.readCertFiles()
 	// Find the signing algorithm
-	_, isRsaKey := privateKey.(rsa.PrivateKey)
+	_, isRsaKey := privateKey.(*rsa.PrivateKey)
 	if isRsaKey {
 		signingAlgorithm = aws4X509RsaSha256
 	}
